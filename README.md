@@ -100,8 +100,12 @@ Classic_ERP/
    ```bash
    cd ../frontend
    ```
-
-2. Run the development server:
+2. Create a `.env` file (see `.env` template below):
+   ```env
+   VITE_API_URL="http://localhost:8000"
+   ```
+   
+3. Run the development server:
    ```bash
    npm run dev
    ```
