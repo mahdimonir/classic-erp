@@ -35,20 +35,23 @@ Make sure the **Backend Server** is running on `http://localhost:8000`.
 ```bash
 npm install
 ```
-
-### 2. Start Development Server
+### 2. Create a `.env` file (see `.env` template below):
+   ```env
+   VITE_API_URL="http://localhost:8000"
+   ```
+### 3. Start Development Server
 ```bash
 npm run dev
 ```
 *The application will launch on **`http://localhost:3000`**.*
 
-### 3. Build for Production
+### 4. Build for Production
 To compile and optimize the app for production:
 ```bash
 npm run build
 ```
 
-### 4. Preview Production Build
+### 5. Preview Production Build
 To spin up a local preview server of the compiled `dist/` directory:
 ```bash
 npm run preview
