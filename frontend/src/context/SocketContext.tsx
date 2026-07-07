@@ -18,7 +18,8 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       return
     }
 
-    const socketInstance = io("http://localhost:8000")
+    const socketURL = import.meta.env.VITE_API_URL || "http://localhost:8000"
+    const socketInstance = io(socketURL)
 
     socketInstance.on("connect", () => {
       console.log("WebSocket client connected to server.")

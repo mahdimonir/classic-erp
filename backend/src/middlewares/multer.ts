@@ -4,9 +4,15 @@ import fs from "fs"
 import { BadRequestError } from "../shared/errors/AppError"
 
 
-const uploadDir = path.join(process.cwd(), "uploads")
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true })
+const isVercel = process.env.VERCEL === "1"
+const uploadDir = isVercel ? "/tmp" : path.join(process.cwd(), "uploads")
+
+try {
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true })
+  }
+} catch (err) {
+  console.warn("Directory creation skipped or failed in serverless context:", err)
 }
 
 const storage = multer.diskStorage({
