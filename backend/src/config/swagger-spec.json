@@ -1,0 +1,409 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Classic ERP API",
+    "version": "1.0.0",
+    "description": "REST API for the Classic ERP system. Includes authentication, product management, sales processing, and real-time dashboard analytics."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8000",
+      "description": "Local development server"
+    },
+    {
+      "url": "https://api-classic-erp.vercel.app",
+      "description": "Production server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "LoginRequest": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": { "type": "string", "format": "email", "example": "admin@erp.com" },
+          "password": { "type": "string", "minLength": 6, "example": "secret123" }
+        }
+      },
+      "RegisterRequest": {
+        "type": "object",
+        "required": ["name", "email", "password"],
+        "properties": {
+          "name": { "type": "string", "example": "John Doe" },
+          "email": { "type": "string", "format": "email", "example": "john@erp.com" },
+          "password": { "type": "string", "minLength": 6, "example": "secret123" }
+        }
+      },
+      "Product": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string" },
+          "name": { "type": "string", "example": "Widget Pro" },
+          "description": { "type": "string", "example": "A high-quality widget" },
+          "price": { "type": "number", "example": 29.99 },
+          "stock": { "type": "integer", "example": 100 },
+          "category": { "type": "string", "example": "Electronics" },
+          "image": { "type": "string", "example": "https://example.com/image.jpg" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "ProductRequest": {
+        "type": "object",
+        "required": ["name", "price", "stock"],
+        "properties": {
+          "name": { "type": "string", "example": "Widget Pro" },
+          "description": { "type": "string", "example": "A high-quality widget" },
+          "price": { "type": "number", "example": 29.99 },
+          "stock": { "type": "integer", "example": 100 },
+          "category": { "type": "string", "example": "Electronics" }
+        }
+      },
+      "SaleItem": {
+        "type": "object",
+        "required": ["product", "quantity"],
+        "properties": {
+          "product": { "type": "string", "description": "Product ID", "example": "6612abc..." },
+          "quantity": { "type": "integer", "example": 2 }
+        }
+      },
+      "SaleRequest": {
+        "type": "object",
+        "required": ["items"],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/SaleItem" }
+          }
+        }
+      },
+      "SuccessResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true },
+          "message": { "type": "string" },
+          "data": {}
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": false },
+          "message": { "type": "string", "example": "An error occurred" },
+          "statusCode": { "type": "integer", "example": 400 }
+        }
+      }
+    }
+  },
+  "security": [{ "bearerAuth": [] }],
+  "tags": [
+    { "name": "Auth", "description": "Authentication and user management" },
+    { "name": "Products", "description": "Product catalog management" },
+    { "name": "Sales", "description": "Sales order processing" },
+    { "name": "Dashboard", "description": "Analytics and reporting" }
+  ],
+  "paths": {
+    "/api/auth/register": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Register a new user",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RegisterRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User registered successfully",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SuccessResponse" } } }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } }
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Login with email and password",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/LoginRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful, returns JWT token",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SuccessResponse" } } }
+          },
+          "401": {
+            "description": "Invalid credentials",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } }
+          }
+        }
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "tags": ["Auth"],
+        "summary": "Get current authenticated user profile",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "User profile returned",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SuccessResponse" } } }
+          },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/api/auth/users": {
+      "get": {
+        "tags": ["Auth"],
+        "summary": "Get all users (Admin only)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "List of all users",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SuccessResponse" } } }
+          },
+          "403": { "description": "Forbidden - requires roles:manage permission" }
+        }
+      }
+    },
+    "/api/auth/users/{id}/role": {
+      "put": {
+        "tags": ["Auth"],
+        "summary": "Update a user's role (Admin only)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "User ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["roleId"],
+                "properties": {
+                  "roleId": { "type": "string", "example": "661abc..." }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Role updated successfully" },
+          "403": { "description": "Forbidden" },
+          "404": { "description": "User not found" }
+        }
+      }
+    },
+    "/api/auth/roles": {
+      "get": {
+        "tags": ["Auth"],
+        "summary": "Get all roles (Admin only)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "List of all roles with permissions",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SuccessResponse" } } }
+          }
+        }
+      }
+    },
+    "/api/products": {
+      "get": {
+        "tags": ["Products"],
+        "summary": "Get paginated product list with search, sort and filter",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "in": "query", "name": "page", "schema": { "type": "integer", "default": 1 } },
+          { "in": "query", "name": "limit", "schema": { "type": "integer", "default": 10 } },
+          { "in": "query", "name": "search", "schema": { "type": "string" }, "description": "Search by name" },
+          { "in": "query", "name": "sort", "schema": { "type": "string" }, "description": "Sort field e.g. price, name" },
+          { "in": "query", "name": "order", "schema": { "type": "string", "enum": ["asc", "desc"] } },
+          { "in": "query", "name": "category", "schema": { "type": "string" }, "description": "Filter by category" },
+          { "in": "query", "name": "minPrice", "schema": { "type": "number" } },
+          { "in": "query", "name": "maxPrice", "schema": { "type": "number" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated product list",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SuccessResponse" } } }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Products"],
+        "summary": "Create a new product",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "description": { "type": "string" },
+                  "price": { "type": "number" },
+                  "stock": { "type": "integer" },
+                  "category": { "type": "string" },
+                  "image": { "type": "string", "format": "binary" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Product created" },
+          "400": { "description": "Validation error" }
+        }
+      }
+    },
+    "/api/products/{id}": {
+      "get": {
+        "tags": ["Products"],
+        "summary": "Get product by ID",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "in": "path", "name": "id", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Product details" },
+          "404": { "description": "Product not found" }
+        }
+      },
+      "put": {
+        "tags": ["Products"],
+        "summary": "Update product by ID",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "in": "path", "name": "id", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": { "$ref": "#/components/schemas/ProductRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Product updated" },
+          "404": { "description": "Product not found" }
+        }
+      },
+      "delete": {
+        "tags": ["Products"],
+        "summary": "Delete product by ID",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "in": "path", "name": "id", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Product deleted" },
+          "404": { "description": "Product not found" }
+        }
+      }
+    },
+    "/api/sales": {
+      "get": {
+        "tags": ["Sales"],
+        "summary": "Get paginated sales list",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "in": "query", "name": "page", "schema": { "type": "integer", "default": 1 } },
+          { "in": "query", "name": "limit", "schema": { "type": "integer", "default": 10 } },
+          { "in": "query", "name": "sort", "schema": { "type": "string" } },
+          { "in": "query", "name": "order", "schema": { "type": "string", "enum": ["asc", "desc"] } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated sales list",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SuccessResponse" } } }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Sales"],
+        "summary": "Create a new sale (checkout cart)",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SaleRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Sale created, stock updated, real-time event emitted" },
+          "400": { "description": "Validation error or insufficient stock" }
+        }
+      }
+    },
+    "/api/sales/{id}": {
+      "get": {
+        "tags": ["Sales"],
+        "summary": "Get sale by ID",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "in": "path", "name": "id", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Sale details with populated product info" },
+          "404": { "description": "Sale not found" }
+        }
+      }
+    },
+    "/api/dashboard": {
+      "get": {
+        "tags": ["Dashboard"],
+        "summary": "Get real-time dashboard metrics and KPIs",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Dashboard analytics including revenue, sales count, and top products",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SuccessResponse" } } }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [],
+        "summary": "Health check endpoint",
+        "security": [],
+        "responses": {
+          "200": { "description": "Server is up and running" }
+        }
+      }
+    }
+  }
+}
